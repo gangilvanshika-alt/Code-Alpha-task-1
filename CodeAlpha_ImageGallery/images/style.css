@@ -1,0 +1,518 @@
+/* ==========================================================
+   Lumen Gallery - style.css
+   1. Design tokens   2. Base   3. Header & filters
+   4. Gallery grid    5. Lightbox   6. Responsive & a11y
+   ========================================================== */
+
+/* ---------- 1. Design tokens (change colours here) ---------- */
+:root {
+  --bg: #0c0d14;
+  --surface: #171a28;
+  --ink: #f4efe6;
+  --muted: #9a9db0;
+  --line: rgba(255, 255, 255, 0.1);
+  --accent: #f5b94a;        /* warm amber, the "light" in Lumen */
+  --accent-ink: #1a1405;    /* text colour on top of the accent */
+
+  --radius: 18px;
+  --font-heading: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+/* ---------- 2. Base ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  /* two soft glows (amber + violet) on a deep night background */
+  background:
+    radial-gradient(900px 520px at 10% -8%, rgba(245, 185, 74, 0.18), transparent 60%),
+    radial-gradient(800px 600px at 100% 0%, rgba(120, 92, 255, 0.16), transparent 60%),
+    var(--bg);
+  background-repeat: no-repeat;
+}
+
+body.no-scroll {
+  overflow: hidden; /* stops page scrolling behind the lightbox */
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ---------- 3. Header & filters ---------- */
+.site-header,
+.toolbar,
+main,
+.site-footer {
+  width: min(1200px, 100% - 2rem);
+  margin-inline: auto;
+}
+
+.site-header {
+  padding-top: 4rem;
+}
+
+.site-title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: clamp(2.75rem, 9vw, 6rem);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+.site-tagline {
+  margin: 1.1rem 0 0;
+  max-width: 52ch;
+  color: var(--muted);
+  font-size: 1.05rem;
+}
+
+/* Sticky glass bar that stays visible while you scroll */
+.toolbar {
+  position: sticky;
+  top: 0.75rem;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+  margin-block: 2rem 1.5rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: rgba(18, 20, 31, 0.72);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 500;
+  transition: background-color 0.25s, color 0.25s;
+}
+
+.filter-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+}
+
+.filter-btn[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.filter-count {
+  font-size: 0.78rem;
+  opacity: 0.7;
+}
+
+.result-count {
+  margin: 0 0.5rem 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+/* ---------- 4. Gallery grid ---------- */
+/* Rows are a fixed height; some cards span 2 rows or 2 columns,
+   which gives the grid a varied, magazine-style look. */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-auto-rows: 210px;
+  grid-auto-flow: dense;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gallery-item:nth-child(6n + 1) {
+  grid-row: span 2; /* tall */
+}
+
+.gallery-item:nth-child(6n + 4) {
+  grid-column: span 2; /* wide */
+}
+
+.gallery-item {
+  animation: card-in 0.5s ease both;
+  animation-delay: calc(min(var(--i, 0), 10) * 45ms);
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.card {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s;
+}
+
+.card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* The "lumen" effect: an amber spotlight follows your mouse.
+   --mx and --my are set by script.js */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(
+    240px circle at var(--mx, 50%) var(--my, 50%),
+    rgba(245, 185, 74, 0.32),
+    transparent 65%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* Caption slides up on hover / keyboard focus */
+.card-caption {
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  padding: 3rem 1.1rem 1rem;
+  background: linear-gradient(to top, rgba(6, 7, 12, 0.92), transparent);
+  color: var(--ink);
+  text-align: left;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.card-title {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.card-category {
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(245, 185, 74, 0.2);
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.card:hover,
+.card:focus-visible {
+  transform: translateY(-4px);
+  border-color: rgba(245, 185, 74, 0.45);
+  box-shadow: 0 22px 44px rgba(0, 0, 0, 0.55), 0 0 40px rgba(245, 185, 74, 0.12);
+}
+
+.card:hover img,
+.card:focus-visible img {
+  transform: scale(1.08);
+}
+
+.card:hover::before,
+.card:focus-visible::before {
+  opacity: 1;
+}
+
+.card:hover .card-caption,
+.card:focus-visible .card-caption {
+  opacity: 1;
+  transform: none;
+}
+
+/* Touch screens have no hover, so always show captions there */
+@media (hover: none) {
+  .card-caption {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Shown when an image file cannot be loaded */
+.gallery-item.is-broken .card::after {
+  content: "Image not found. Check the path in script.js";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.gallery-item.is-broken .card img {
+  visibility: hidden;
+}
+
+/* ---------- 5. Lightbox ---------- */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(6, 7, 12, 0.82);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s;
+}
+
+.lightbox.is-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.lb-figure {
+  margin: 0;
+  max-width: min(1100px, 100%);
+  text-align: center;
+  transform: scale(0.95);
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.lightbox.is-open .lb-figure {
+  transform: none;
+}
+
+.lb-img {
+  max-width: 100%;
+  max-height: 78vh;
+  margin-inline: auto;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), 0 0 60px rgba(245, 185, 74, 0.1);
+  transition: opacity 0.25s ease;
+}
+
+.lb-img.is-loading {
+  opacity: 0.25;
+}
+
+.lb-caption {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.lb-title {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.lb-counter {
+  color: var(--accent);
+  font-size: 0.9rem;
+}
+
+.lb-btn {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: var(--ink);
+  font-size: 1.9rem;
+  line-height: 1;
+  transition: background-color 0.2s, color 0.2s, transform 0.2s;
+}
+
+.lb-btn:hover {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.lb-close {
+  top: 1rem;
+  right: 1rem;
+}
+
+.lb-prev {
+  left: 1rem;
+  top: 50%;
+  translate: 0 -50%;
+}
+
+.lb-next {
+  right: 1rem;
+  top: 50%;
+  translate: 0 -50%;
+}
+
+/* ---------- Footer ---------- */
+.site-footer {
+  padding-block: 3.5rem 2rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* ---------- 6. Responsive & accessibility ---------- */
+
+/* Tablet */
+@media (max-width: 900px) {
+  .gallery {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-auto-rows: 180px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .site-header {
+    padding-top: 2.5rem;
+  }
+
+  .toolbar {
+    top: 0.5rem;
+    margin-block: 1.5rem 1rem;
+  }
+
+  .gallery {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 150px;
+    gap: 10px;
+  }
+
+  /* Filters scroll sideways instead of wrapping into many rows */
+  .filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    width: 100%;
+  }
+
+  .filter-btn {
+    flex: 0 0 auto;
+  }
+
+  .card-caption {
+    padding: 2rem 0.7rem 0.6rem;
+  }
+
+  .card-title {
+    font-size: 0.95rem;
+  }
+
+  /* Move lightbox arrows to the bottom so they don't cover the photo */
+  .lb-prev,
+  .lb-next {
+    top: auto;
+    bottom: 1rem;
+    translate: none;
+  }
+
+  .lb-prev {
+    left: calc(50% - 62px);
+  }
+
+  .lb-next {
+    right: calc(50% - 62px);
+  }
+
+  .lb-img {
+    max-height: 64vh;
+  }
+}
+
+/* Very small phones: one column, no tall/wide cards */
+@media (max-width: 360px) {
+  .gallery {
+    grid-template-columns: 1fr;
+    grid-auto-rows: 220px;
+  }
+
+  .gallery-item:nth-child(6n + 1),
+  .gallery-item:nth-child(6n + 4) {
+    grid-row: auto;
+    grid-column: auto;
+  }
+}
+
+/* Respect users who prefer less motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
